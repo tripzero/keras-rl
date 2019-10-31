@@ -1,5 +1,6 @@
 from __future__ import division
 import argparse
+import os
 
 from PIL import Image
 import numpy as np
@@ -43,10 +44,12 @@ class AtariProcessor(Processor):
     def process_reward(self, reward):
         return np.clip(reward, -1., 1.)
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
 parser.add_argument('--env-name', type=str, default='BreakoutDeterministic-v4')
 parser.add_argument('--weights', type=str, default=None)
+parser.add_argument('--output_dir', type=str, default=None)
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
@@ -103,9 +106,15 @@ if args.mode == 'train':
     # can be prematurely aborted. Notice that now you can use the built-in
     # Keras callbacks!
     weights_filename = 'dqn_{}_weights.h5f'.format(args.env_name)
+
     checkpoint_weights_filename = 'dqn_' + \
         args.env_name + '_weights_{step}.h5f'
     log_filename = 'dqn_{}_log.json'.format(args.env_name)
+
+    if args.output_dir is not None:
+        weights_filename = os.path.join(args.output_dir, weights_filename)
+        log_filename = os.path.join(args.output_dir, log_filename)
+
     callbacks = [ModelIntervalCheckpoint(
         checkpoint_weights_filename, interval=250000)]
     callbacks += [FileLogger(log_filename, interval=100)]
@@ -118,6 +127,11 @@ if args.mode == 'train':
     dqn.test(env, nb_episodes=10, visualize=False)
 elif args.mode == 'test':
     weights_filename = 'dqn_{}_weights.h5f'.format(args.env_name)
+
+    if args.output_dir is not None:
+        weights_filename = os.path.join(args.output_dir, weights_filename)
+        log_filename = os.path.join(args.output_dir, log_filename)
+
     if args.weights:
         weights_filename = args.weights
     dqn.load_weights(weights_filename)
