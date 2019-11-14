@@ -2,6 +2,7 @@ from __future__ import division
 import argparse
 import os
 
+import cv2
 from PIL import Image
 import numpy as np
 import gym
@@ -24,12 +25,30 @@ WINDOW_LENGTH = 4
 
 class AtariProcessor(Processor):
 
+    def __init__(self, show=False, output_dir=None):
+        self.show = show
+
+        if show:
+            self.out_file = os.path.join(output_dir, "atari_playback.avi")
+            print("will write to {}".format(self.out_file))
+            self.writer = None
+
     def process_observation(self, observation):
         assert observation.ndim == 3  # (height, width, channel)
         img = Image.fromarray(observation)
-        img = img.resize(INPUT_SHAPE).convert(
+        img_p = img.resize(INPUT_SHAPE).convert(
             'L')  # resize and convert to grayscale
-        processed_observation = np.array(img)
+        processed_observation = np.array(img_p)
+
+        if self.show:
+            po = cv2.resize(np.array(img), (640, 480))
+            if self.writer is None:
+                codec = cv2.VideoWriter_fourcc('P', 'I', 'M', '1')
+                self.writer = cv2.VideoWriter(
+                    self.out_file, codec, 25, (po.shape[1], po.shape[0]))
+
+            self.writer.write(po)
+
         assert processed_observation.shape == INPUT_SHAPE
         # saves storage in experience memory
         return processed_observation.astype('uint8')
@@ -44,12 +63,18 @@ class AtariProcessor(Processor):
     def process_reward(self, reward):
         return np.clip(reward, -1., 1.)
 
+    def finish(self):
+        if self.show:
+            print("finalizing video playback...")
+            self.writer.release()
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
 parser.add_argument('--env-name', type=str, default='BreakoutDeterministic-v4')
 parser.add_argument('--weights', type=str, default=None)
 parser.add_argument('--output_dir', type=str, default=None)
+parser.add_argument('--show', action='store_true', default=False)
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
@@ -79,7 +104,7 @@ print(model.summary())
 # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
 # even the metrics!
 memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
-processor = AtariProcessor()
+processor = AtariProcessor(args.show, args.output_dir)
 
 # Select a policy. We use eps-greedy action selection, which means that a random action is selected
 # with probability eps. We anneal eps from 1.0 to 0.1 over the course of 1M steps. This is done so that
@@ -122,6 +147,7 @@ if args.mode == 'train':
 
     # After training is done, we save the final weights one more time.
     dqn.save_weights(weights_filename, overwrite=True)
+    processor.finish()
 
     # Finally, evaluate our algorithm for 10 episodes.
     dqn.test(env, nb_episodes=10, visualize=False)
@@ -135,4 +161,4 @@ elif args.mode == 'test':
     if args.weights:
         weights_filename = args.weights
     dqn.load_weights(weights_filename)
-    dqn.test(env, nb_episodes=10, visualize=True)
+    dqn.test(env, nb_episodes=10, visualize=False)
