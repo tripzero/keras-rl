@@ -22,6 +22,20 @@ from rl.callbacks import FileLogger, ModelIntervalCheckpoint
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 4
 
+try:
+    import ngraph_bridge
+    import tensorflow as tf
+
+    config = tf.ConfigProto()
+    config_ngraph_enabled = ngraph_bridge.update_config(config)
+    sess = tf.Session(config=config_ngraph_enabled)
+
+    print(ngraph_bridge.list_backends())
+    ngraph_bridge.set_backend('INTELGPU')
+
+except Exception as ex:
+    print(ex)
+
 
 class AtariProcessor(Processor):
 
