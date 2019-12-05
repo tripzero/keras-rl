@@ -26,19 +26,21 @@ try:
     import ngraph_bridge
     import tensorflow as tf
 
-    config = tf.ConfigProto()
+    config = tf.compat.v1.ConfigProto()
     config_ngraph_enabled = ngraph_bridge.update_config(config)
-    sess = tf.Session(config=config_ngraph_enabled)
+    sess = tf.compat.v1.Session(config=config_ngraph_enabled)
 
     print(ngraph_bridge.list_backends())
     ngraph_bridge.set_backend('INTELGPU')
 
 except Exception as ex:
     print(ex)
-    config = tf.ConfigProto()
+    import tensorflow as tf
+
+    config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     config.gpu_options.per_process_gpu_memory_fraction = 2
-    sess = tf.Session(config=config)
+    sess = tf.compat.v1.Session(config=config)
 
 
 class AtariProcessor(Processor):
