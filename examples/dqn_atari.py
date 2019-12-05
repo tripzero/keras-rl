@@ -166,6 +166,7 @@ if args.mode == 'train':
     # Finally, evaluate our algorithm for 10 episodes.
     dqn.test(env, nb_episodes=10, visualize=False)
 elif args.mode == 'test':
+    log_filename = 'dqn_{}_log.json'.format(args.env_name)
     weights_filename = 'dqn_{}_weights.h5f'.format(args.env_name)
 
     if args.output_dir is not None:
