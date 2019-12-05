@@ -35,6 +35,10 @@ try:
 
 except Exception as ex:
     print(ex)
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    config.gpu_options.per_process_gpu_memory_fraction = 2
+    sess = tf.Session(config=config)
 
 
 class AtariProcessor(Processor):
@@ -164,7 +168,7 @@ if args.mode == 'train':
     processor.finish()
 
     # Finally, evaluate our algorithm for 10 episodes.
-    dqn.test(env, nb_episodes=10, visualize=False)
+    # dqn.test(env, nb_episodes=10, visualize=False)
 elif args.mode == 'test':
     log_filename = 'dqn_{}_log.json'.format(args.env_name)
     weights_filename = 'dqn_{}_weights.h5f'.format(args.env_name)
