@@ -157,6 +157,8 @@ if args.mode == 'train':
     log_filename = 'dqn_{}_log.json'.format(args.env_name)
 
     if args.output_dir is not None:
+        checkpoint_weights_filename = os.path.join(
+            args.output_dir, checkpoint_weights_filename)
         weights_filename = os.path.join(args.output_dir, weights_filename)
         log_filename = os.path.join(args.output_dir, log_filename)
 
