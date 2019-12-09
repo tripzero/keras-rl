@@ -123,7 +123,7 @@ print(model.summary())
 
 # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
 # even the metrics!
-memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
+memory = SequentialMemory(limit=500000, window_length=WINDOW_LENGTH)
 processor = AtariProcessor(args.show, args.output_dir)
 
 # Select a policy. We use eps-greedy action selection, which means that a random action is selected
